@@ -1,0 +1,22 @@
+{
+  "name": "troopjs-when",
+  "version": "0.0.1",
+  "authors": [
+    "Garry Yao <yaojun85@gmail.com>"
+  ],
+  "description": "TroopJS extensions for when.js",
+  "license": "MIT",
+  "homepage": "https://github.com/garryyao/troopjs-when",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+		"troopjs-core": "develop",
+		"when": "~2.6",
+    "poly": "~0.6"
+	}
+}
