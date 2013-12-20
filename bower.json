@@ -15,8 +15,8 @@
     "tests"
   ],
   "dependencies": {
-		"troopjs-core": "develop",
-		"when": "~2.6",
+    "troopjs-core": "develop",
+    "when": "~2.7",
     "poly": "~0.6"
-	}
+  }
 }
