@@ -21,7 +21,6 @@ define(function() {
 
 			this.key = nextKey++;
 			this.parent = parent;
-			this.timestamp = +(new Date());
 			this.createdAt = stackHolder;
 		}
 
@@ -47,7 +46,7 @@ define(function() {
 				this.reason = reason;
 				this.rejectedAt = stackHolder;
 
-				// Log any rejection.
+				// Log this single rejection.
 				logger(formatter(this));
 			},
 			fulfilled: emptyFn

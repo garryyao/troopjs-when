@@ -1,5 +1,5 @@
-define(["poly/array","poly/string"], function() {
-	return function(isExcluded, replace) {
+define(["poly/array", "poly/string"], function() {
+	return function(isExcluded, replacer) {
 		return function filterStack(stack) {
 			var excluded;
 
@@ -16,23 +16,22 @@ define(["poly/array","poly/string"], function() {
 				line = line.trimLeft();
 
 				match = isExcluded(line);
-				if (match) {
-					if (!excluded) {
-						excluded = [];
-					}
-					excluded.push(line);
-				} else {
-					if (excluded) {
-						if (filtered.length > 1) {
-							filtered = filtered.concat(replace(excluded));
-							excluded = null;
-						}
+				if (!match) {
+					if (excluded && excluded.length && filtered.length) {
+						var substitution = typeof replacer == 'function' ? replacer(excluded) : replacer;
+						filtered = filtered.concat(substitution);
+						excluded = null;
 					}
 					filtered.push(line);
-				}
+				} else if (replacer) {
+						if (!excluded) {
+							excluded = [];
+						}
+						excluded.push(line);
+					}
 
 				return filtered;
-			},[]);
+			}, []);
 		};
 	};
 });

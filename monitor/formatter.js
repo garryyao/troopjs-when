@@ -1,5 +1,4 @@
-define(function() {
-	'use strict';
+define(['./stackfilter'], function(stackfilter) {
 
 	var hasStackTraces;
 
@@ -10,53 +9,70 @@ define(function() {
 		hasStackTraces = !!e.stack;
 	}
 
-	return function(filterStack, unhandledMsg, stackJumpMsg) {
-		return function format(rec) {
-			var cause, formatted;
+	var filename_exclude_regexp = /(when|aggregator)\.js/;
+	var funcname_exclude_regexp = /\.PromiseStatus|Promise\./;
+	function filterLine(line) {
+		return filename_exclude_regexp.exec(line) || funcname_exclude_regexp.exec(line);
+	}
+	function filterStackLine() {
+		return false;
+	}
 
-			formatted = {
-				reason: rec.reason,
-				message: rec.reason && rec.reason.toString()
-			};
+	var rejections_stack_header = '=== Rejection promise stack ===';
+	var cause_stack_header = '=== Rejection cause stack ===';
 
-			if (hasStackTraces) {
-				cause = rec.reason && rec.reason.stack;
-				if (!cause) {
-					cause = rec.rejectedAt && rec.rejectedAt.stack;
-				}
-				var jumps = formatStackJumps(rec);
-				formatted.stack = stitch(rec.createdAt.stack, jumps, cause);
-			}
+	var rejectionsStackFilter = stackfilter(filterLine);
+	var causeStackFilter = stackfilter(filterStackLine, '...');
 
-			return formatted;
+	// Format all promise rejections in a stack.
+	function formatRejectionStack(rej) {
+		var promises = [], line;
+
+		while ( rej ) {
+			line = formatRejection(rej);
+			line && promises.push(line);
+			rej = rej.parent;
+		}
+
+		return promises;
+	}
+
+	// Filtering out stack lines from when internal, leaving only the line where the thenable is created.
+	function formatRejection(rej) {
+		var stack = lines(rej.createdAt.stack).slice(1);
+		stack = rejectionsStackFilter(stack);
+		return stack.length? stack[0] : null;
+	}
+
+	function stitch(rejectionCause, rejectionStack) {
+		return [rejections_stack_header]
+						 .concat(rejectionStack)
+						 .concat([cause_stack_header])
+						 .concat(rejectionCause).join('\n');
+	}
+
+	function lines(stack) {
+		return stack ? stack.split('\n') : [];
+	}
+
+	return function format(rec) {
+		var cause, formatted;
+
+		formatted = {
+			reason: rec.reason,
+			message: rec.reason && rec.reason.toString()
 		};
 
-		function formatStackJumps(rec) {
-			var jumps = [];
-
-			rec = rec.parent;
-			while ( rec ) {
-				jumps.push(formatStackJump(rec));
-				rec = rec.parent;
+		if (hasStackTraces) {
+			cause = rec.reason && rec.reason.stack;
+			if (!cause) {
+				cause = rec.rejectedAt && rec.rejectedAt.stack;
 			}
-
-			return jumps;
+			formatted.stack = stitch(causeStackFilter(lines(cause)), formatRejectionStack(rec));
 		}
 
-		function formatStackJump(rec) {
-			return filterStack(toArray(rec.createdAt.stack).slice(1));
-		}
-
-		function stitch(escaped, jumps, rejected) {
-			rejected = filterStack(toArray(rejected));
-			return jumps.reduce(function(stack, jump, i) {
-				return i ? stack.concat(stackJumpMsg, jump) : stack.concat(jump);
-			}, [unhandledMsg].concat(rejected));
-		}
-
-		function toArray(stack) {
-			return stack ? stack.split('\n') : [];
-		}
+		return formatted;
 	};
+
 
 });
