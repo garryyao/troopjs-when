@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="../../bower_components/requirejs/require.js"></script>
+    <script type="text/javascript">
+			var tests = [
+				'./test/monitor/deep-chain',
+				'./test/monitor/developer-error',
+				'./test/monitor/immediate-rejections',
+				'./test/monitor/map',
+				'./test/monitor/multiple-escapes',
+				'./test/monitor/returned-promise',
+				'./test/monitor/spread',
+				'./test/monitor/thenable'
+			];
+
+       require.config({
+				 baseUrl: '../../',
+				 packages: [
+					 { name: 'when', location: 'bower_components/when', main: 'when' },
+					 { name: 'poly', location: 'bower_components/poly' },
+					 { name: 'troopjs-core', location: 'bower_components/troopjs-core' },
+					 { name: 'troopjs-utils', location: 'bower_components/troopjs-utils' },
+					 { name: 'troopjs-when', location: '.' }
+				 ],
+				 deps: ['require'],
+				 callback: function(require) {
+					 require(['troopjs-when/monitor/service', 'troopjs-core/component/gadget'],
+						 function(monitor, gadget) {
+							 gadget.create({
+								 "sig/start": function() {
+									 return monitor.start().then(function() {
+										 require(tests);
+									 });
+								 },
+								 "hub/promise/rejection": function(rej) {
+									 console.warn(rej.stack);
+								 }
+							 }).start();
+						 });
+				 }
+			 });
+    </script>
+</head>
+<body>
+</body>
+</html>

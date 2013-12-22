@@ -18,5 +18,8 @@
     "troopjs-core": "develop",
     "when": "~2.7",
     "poly": "~0.6"
+  },
+  "devDependencies": {
+    "requirejs": "~2.1.9"
   }
 }
