@@ -16,7 +16,7 @@
   ],
   "dependencies": {
     "troopjs-core": "develop",
-    "when": "~2.7",
+    "when": "http://github.com/garryyao/when.git#master",
     "poly": "~0.6"
   },
   "devDependencies": {

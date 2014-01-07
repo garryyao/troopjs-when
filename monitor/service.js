@@ -1,17 +1,36 @@
 define([
+	"module",
 	"troopjs-core/component/service",
-	'./reporter',
-	'./formatter',
-	'./stackfilter',
 	"when",
+	'when/monitor/aggregator',
+	'when/monitor/throttledReporter',
+	'when/monitor/simpleFormatter',
+	'when/monitor/logger/consoleGroup',
 	"poly/function"
-], function(Service, reporter, formatter, filter, when) {
+], function(module, Service, when, createAggregator, throttleReporter, simpleFormatter, logger) {
 
-	return Service.create({
+	var cfg = module.config();
+    var promiseFilters = cfg["promiseFilter"] || [
+        /when\.js|(module|node)\.js:\d|when\//i,
+        /\b(PromiseStatus|Promise)\b/i,
+        /jquery(?:-[\d.]+)\.js/,
+        /require\.js/i,
+        /troopjs-/i
+    ];
+
+    var errorFilters = cfg["errorFilter"] || [
+        /(when|keys|aggregator|reporter)\.js/
+    ];
+
+    return Service.create({
 		"displayName": "troopjs-when/monitor/service",
 		"sig/start": function() {
+			var formatter = simpleFormatter({filter: promiseFilters}, {filter: errorFilters, replacer: '...'});
+			var aggregator = createAggregator(throttleReporter(formatter, logger));
+
 			var bridge = typeof console !== 'undefined' ? console : when;
-			reporter(this.log.bind(this), formatter).publish(bridge);
+			aggregator.publish(bridge);
+			return aggregator;
 		},
 		log: function(rej) {
 			// Publish the rejection.
